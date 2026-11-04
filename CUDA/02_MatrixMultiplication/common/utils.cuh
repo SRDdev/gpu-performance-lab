@@ -127,7 +127,7 @@ inline void print_usage(const char* exe) {
         << "Options:\n"
         << "  --kernel NAME       Kernel: all, naive, coalesced, shared_mem,\n"
         << "                      block_tile_1d, block_tile_2d, vectorized,\n"
-        << "                      bank_conflicts, bank_extra_col, warp_tiling\n"
+        << "                      bank_conflicts, bank_extra_col, warp_tiling, ptx\n"
         << "  --threads-x X       Threads in block x dimension (default: 16)\n"
         << "  --threads-y Y       Threads in block y dimension (default: 16)\n"
         << "  --warmup W          Warmup launches (default: 10)\n"

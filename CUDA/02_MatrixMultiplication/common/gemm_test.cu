@@ -23,6 +23,7 @@
 #include "../kernels/07_Bank_conflits_gemm.cuh"
 #include "../kernels/08_bank_extra_col_gemm.cuh"
 #include "../kernels/09_wrap_tiling_gemm.cuh"
+#include "../kernels/10_ptx_gemm.cuh"
 
 // ============================================================
 // Device Buffers
@@ -75,7 +76,7 @@ int main(int argc, char** argv) {
         const std::vector<std::string> kernel_names = {
             "naive", "coalesced", "shared_mem", "block_tile_1d",
             "block_tile_2d", "vectorized", "bank_conflicts",
-            "bank_extra_col", "warp_tiling"
+            "bank_extra_col", "warp_tiling", "ptx"
         };
         if (cfg.kernel != "all" &&
             std::find(kernel_names.begin(), kernel_names.end(), cfg.kernel) ==
@@ -84,7 +85,7 @@ int main(int argc, char** argv) {
                 "Invalid --kernel value. "
                 "Use: all, naive, coalesced, shared_mem, block_tile_1d, "
                 "block_tile_2d, vectorized, bank_conflicts, bank_extra_col, "
-                "or warp_tiling"
+                "warp_tiling, or ptx"
             );
         }
 
@@ -280,6 +281,15 @@ int main(int argc, char** argv) {
         constexpr int WARP_TM = 8;
         constexpr int WARP_TN = 4;
         constexpr int WARP_THREADS = 128;
+        constexpr int PTX_BM = 128;
+        constexpr int PTX_BN = 64;
+        constexpr int PTX_BK = 8;
+        constexpr int PTX_WM = 64;
+        constexpr int PTX_WN = 32;
+        constexpr int PTX_WNITER = 2;
+        constexpr int PTX_TM = 8;
+        constexpr int PTX_TN = 4;
+        constexpr int PTX_THREADS = 128;
 
         const dim3 tiled_1d_block(TILE_THREADS_1D);
         const dim3 tiled_1d_grid(
@@ -463,6 +473,37 @@ int main(int argc, char** argv) {
                     "Coalesced GEMM",
                     coalesced_launch
                 )
+            );
+        }
+
+        // Run the inline-PTX GEMM.
+        if (cfg.kernel == "all" || cfg.kernel == "ptx") {
+
+            const dim3 ptx_block(PTX_THREADS);
+
+            const dim3 ptx_grid(
+                (cfg.N + PTX_BN - 1) / PTX_BN,
+                (cfg.M + PTX_BM - 1) / PTX_BM
+            );
+
+            auto ptx_launch = [&]() {
+                warp_tiling_ptx::warp_tiling_ptx_gemm<
+                    PTX_BM, PTX_BN, PTX_BK, PTX_WM, PTX_WN,
+                    PTX_WNITER, PTX_TM, PTX_TN, PTX_THREADS>
+                    <<<ptx_grid, ptx_block>>>(
+                    cfg.M,
+                    cfg.N,
+                    cfg.K,
+                    cfg.alpha,
+                    d.A,
+                    d.B,
+                    cfg.beta,
+                    d.C
+                );
+            };
+
+            results.push_back(
+                run_kernel("Inline PTX GEMM", ptx_launch)
             );
         }
 

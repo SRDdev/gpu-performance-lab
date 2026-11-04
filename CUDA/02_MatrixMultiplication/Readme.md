@@ -71,7 +71,8 @@ run and before the correctness run. The harness does this explicitly.
 │   ├── 06_Vectorized_gemm.cuh
 │   ├── 07_Bank_conflits_gemm.cuh
 │   ├── 08_bank_extra_col_gemm.cuh
-│   └── 09_wrap_tiling_gemm.cuh
+│   ├── 09_wrap_tiling_gemm.cuh
+│   └── 10_ptx_gemm.cuh
 └── Readme.md
 ```
 
@@ -92,6 +93,7 @@ descriptive names listed below.
 | `07_Bank_conflits_gemm.cuh` | `bank_conflicts_gemm` | `bank_conflicts` | Change shared-memory layout/access |
 | `08_bank_extra_col_gemm.cuh` | `bank_extra_col_gemm` | `bank_extra_col` | Add shared-memory stride padding |
 | `09_wrap_tiling_gemm.cuh` | `warp_tiling_gemm` | `warp_tiling` | Assign output subtiles to warps |
+| `10_ptx_gemm.cuh` | `warp_tiling_ptx_gemm` | `ptx` | Use inline PTX for warp-tiled FP32 FMA |
 
 Run all supported kernels with `--kernel all`, or select one using the CLI
 identifier. The command-line name and the CUDA symbol are intentionally
